@@ -1,31 +1,36 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\RegisteredUserController;
+use App\Http\Controllers\SessionController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/test', function () {
+    $job = \App\Models\Job::first();
+    \App\Jobs\TranslateJob::dispatch($job);
+
+    return 'Done';
 });
+Route::view('/', 'home');
+Route::view('/contact', 'contact');
 
-Auth::routes();
-//Blogs admin path
-$groupData = ['namespace' => 'Blog\Admin', 'prefix' => 'admin/blog'];
+Route::get('/jobs', [JobController::class, 'index']);
+Route::get('/jobs/create', [JobController::class, 'create']);
+Route::post('/jobs', [JobController::class, 'store'])->middleware('auth');
+Route::get('/jobs/{job}', [JobController::class, 'show']);
 
-Route::group($groupData, function () {
-    //category admin category
-    $methods = ['index', 'edit', 'store', 'update', 'create'];
-    Route::resource('categories', 'CategoryController')->only($methods)->names('blog.admin.categories');
-    Route::resource('posts', 'PostController')->except(['show'])->names('blog.admin.posts');
-});
+Route::get('/jobs/{job}/edit', [JobController::class, 'edit'])
+    ->middleware('auth')
+    ->can('edit', 'job');
 
-Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/jobs', 'HomeController@jobs')->name('jobs');
-//Route::resource('rest','RestTestController')->names('restTest');
+Route::patch('/jobs/{job}', [JobController::class, 'update']);
+Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
+
+// Auth
+Route::get('/register', [RegisteredUserController::class, 'create']);
+Route::post('/register', [RegisteredUserController::class, 'store']);
+
+Route::get('/login', [SessionController::class, 'create'])->name('login');
+Route::post('/login', [SessionController::class, 'store']);
+Route::post('/logout', [SessionController::class, 'destroy']);
+

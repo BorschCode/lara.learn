@@ -2,32 +2,31 @@
 
 namespace App\Providers;
 
-use App\Models\BlogCategory;
-use App\Models\BlogPost;
-use App\Observers\BlogCategoryObserver;
-use App\Observers\BlogPostObserver;
+use App\Models\Job;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         //
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        BlogPost::observe(BlogPostObserver::class);
-        BlogCategory::observe(BlogCategoryObserver::class);
+        Model::preventLazyLoading();
+        Paginator::useBootstrapFive('pagination::tailwind');
+        \Gate::define('edit-job', function (User $user, Job $job) {
+            return $job->employer->user()->is(\Auth::user());
+        });
     }
 }
